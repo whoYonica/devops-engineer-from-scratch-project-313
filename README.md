@@ -7,20 +7,55 @@
 Учебный проект Хекслета: https://ru.hexlet.io/programs/devops-engineer-from-scratch
 
 
+
 ## Стек
 
 - Python
+- Flask
+- uv
+- Make
 
 ## Установка
 
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
+Склонируйте репозиторий:
 
 ```bash
 git clone https://github.com/whoYonica/devops-engineer-from-scratch-project-313.git
 cd devops-engineer-from-scratch-project-313
 ```
 
+Установите зависимости с помощью uv:
+
+```bash
+uv sync
+```
+
 ## Использование
+
+Для запуска приложения выполните:
+
+```bash
+make run
+```
+
+Приложение запускается на порту 8080.
+
+Проверить работу приложения можно командой:
+
+```bash
+curl http://localhost:8080/ping
+```
+
+Ожидаемый ответ:
+
+```text
+pong
+```
+
+### Демонстрация работы
+
+## Запуск приложения:
+[![asciicast](https://asciinema.org/a/C6Rsfs23kbpOh2bz.svg)](https://asciinema.org/a/C6Rsfs23kbpOh2bz)
 
 <!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
 
