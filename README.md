@@ -2,6 +2,10 @@
 
 [![hexlet-check](https://github.com/whoYonica/devops-engineer-from-scratch-project-313/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/whoYonica/devops-engineer-from-scratch-project-313/actions)
 
+
+[![CI](https://github.com/whoYonica/devops-engineer-from-scratch-project-313/actions/workflows/ci.yml/badge.svg)](https://github.com/whoYonica/devops-engineer-from-scratch-project-313/actions/workflows/ci.yml)
+
+
 Создайте и задеплойте веб-приложение, подключите базу данных и настройте мониторинг ошибок
 
 Учебный проект Хекслета: https://ru.hexlet.io/programs/devops-engineer-from-scratch
