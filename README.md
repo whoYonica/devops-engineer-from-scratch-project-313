@@ -57,11 +57,13 @@ pong
 
 ### Демонстрация работы
 
-## Запуск приложения:
+# Запуск приложения:
 [![asciicast](https://asciinema.org/a/C6Rsfs23kbpOh2bz.svg)](https://asciinema.org/a/C6Rsfs23kbpOh2bz)
 
 <!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
 
+## Мониторинг ошибок
+![Ошибка в Bugsink](docs/test Bugsink error.png)
 ---
 
 <details>
