@@ -63,7 +63,7 @@ pong
 <!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
 
 ## Мониторинг ошибок
-![Ошибка в Bugsink](docs/test Bugsink error.png)
+![Ошибка в Bugsink](docs/bugsink-error.png)
 ---
 
 <details>
