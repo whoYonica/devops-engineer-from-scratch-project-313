@@ -19,3 +19,9 @@ app = Flask(__name__)
 @app.get("/ping")
 def ping():
     return "pong"
+
+
+@app.get("/debug-error")
+def debug_error():
+    raise RuntimeError("Test error for Bugsink")
+
