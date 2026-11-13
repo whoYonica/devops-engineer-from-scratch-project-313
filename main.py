@@ -106,3 +106,53 @@ def get_link(link_id):
             return jsonify({"detail": "Link not found"}), 404
 
         return jsonify(link_to_dict(link)), 200
+
+@app.put("/api/links/<int:link_id>")
+def update_link(link_id):
+    with Session(get_engine()) as session:
+        link = session.get(Link, link_id)
+
+        if link is None:
+            return jsonify({"detail": "Link not found"}), 404
+
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict):
+            return jsonify({"detail": "Expected a JSON object"}), 422
+
+        original_url = data.get("original_url")
+        short_name = data.get("short_name")
+
+        errors = {}
+
+        if not isinstance(original_url, str) or not original_url.strip():
+            errors["original_url"] = "URL is required"
+        else:
+            parsed_url = urlparse(original_url)
+
+            if parsed_url.scheme not in ("http", "https") or not parsed_url.netloc:
+                errors["original_url"] = "Invalid URL"
+
+        if not isinstance(short_name, str) or not short_name.strip():
+            errors["short_name"] = "Short name is required"
+
+        if errors:
+            return jsonify({"detail": errors}), 422
+
+        link.original_url = original_url
+        link.short_name = short_name
+
+        try:
+            session.add(link)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            return jsonify({
+                "detail": {
+                    "short_name": "Short name already exists"
+                }
+            }), 422
+
+        session.refresh(link)
+
+        return jsonify(link_to_dict(link)), 200
