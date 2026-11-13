@@ -96,3 +96,13 @@ def create_link():
         session.refresh(link)
 
         return jsonify(link_to_dict(link)), 201
+
+@app.get("/api/links/<int:link_id>")
+def get_link(link_id):
+    with Session(get_engine()) as session:
+        link = session.get(Link, link_id)
+
+        if link is None:
+            return jsonify({"detail": "Link not found"}), 404
+
+        return jsonify(link_to_dict(link)), 200
