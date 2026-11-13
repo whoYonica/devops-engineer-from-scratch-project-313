@@ -2,9 +2,8 @@ import os
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-from flask import Flask
+from flask import Flask, jsonify, redirect, request
 from database import create_db_and_tables, get_engine
-from flask import jsonify, request
 from sqlmodel import Session, select
 
 from models import Link
@@ -169,3 +168,17 @@ def delete_link(link_id):
         session.commit()
 
     return "", 204
+
+@app.get("/r/<short_name>")
+def redirect_link(short_name):
+    with Session(get_engine()) as session:
+        link = session.exec(
+            select(Link).where(Link.short_name == short_name)
+        ).first()
+
+        if link is None:
+            return jsonify({"detail": "Link not found"}), 404
+
+        original_url = link.original_url
+
+    return redirect(original_url, code=302)
