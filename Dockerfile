@@ -8,7 +8,7 @@ COPY pyproject.toml uv.lock ./
 
 RUN uv sync --locked --no-dev
 
-COPY main.py .
+COPY main.py models.py database.py ./
 
 EXPOSE 8080
 
