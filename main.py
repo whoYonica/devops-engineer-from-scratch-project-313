@@ -156,3 +156,16 @@ def update_link(link_id):
         session.refresh(link)
 
         return jsonify(link_to_dict(link)), 200
+
+@app.delete("/api/links/<int:link_id>")
+def delete_link(link_id):
+    with Session(get_engine()) as session:
+        link = session.get(Link, link_id)
+
+        if link is None:
+            return jsonify({"detail": "Link not found"}), 404
+
+        session.delete(link)
+        session.commit()
+
+    return "", 204
