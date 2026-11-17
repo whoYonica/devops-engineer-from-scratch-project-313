@@ -200,3 +200,36 @@ def test_redirect_link(client):
 
     assert missing_response.status_code == 404
     assert "detail" in missing_response.json
+
+def test_links_pagination(client):
+    for i in range(11):
+        response = client.post(
+            "/api/links",
+            json={
+                "original_url": "https://example.com",
+                "short_name": f"link-{i}",
+            },
+        )
+
+        assert response.status_code == 201
+
+    response = client.get("/api/links?range=[0,10]")
+
+    assert response.status_code == 200
+    assert len(response.json) == 10
+    assert response.headers["Content-Range"] == "links 0-10/11"
+
+    response = client.get("/api/links?range=[5,10]")
+
+    assert response.status_code == 200
+    assert len(response.json) == 5
+    assert response.headers["Content-Range"] == "links 5-10/11"
+
+    assert response.json[0]["short_name"] == "link-5"
+    assert response.json[-1]["short_name"] == "link-9"
+
+def test_invalid_pagination(client):
+    response = client.get("/api/links?range=[10,5]")
+
+    assert response.status_code == 422
+    assert "detail" in response.json

@@ -11,6 +11,9 @@ from urllib.parse import urlparse
 
 from sqlalchemy.exc import IntegrityError
 
+import json
+from sqlalchemy import func
+
 
 sentry_dsn = os.getenv("SENTRY_DSN")
 
@@ -42,12 +45,49 @@ def link_to_dict(link):
 
 @app.get("/api/links")
 def get_links():
+    range_param = request.args.get("range")
+
+    if range_param is not None:
+        try:
+            bounds = json.loads(range_param)
+
+            if (
+                not isinstance(bounds, list)
+                or len(bounds) != 2
+                or any(type(value) is not int for value in bounds)
+                or bounds[0] < 0
+                or bounds[1] < bounds[0]
+            ):
+                raise ValueError("Invalid range")
+
+            start, end = bounds
+
+        except (ValueError, TypeError):
+            return jsonify({"detail": "Invalid range"}), 422
+
     with Session(get_engine()) as session:
+        total = session.exec(
+            select(func.count(Link.id))
+        ).one()
+
+        if range_param is None:
+            start, end = 0, total
+
+        start = min(start, total)
+        end = min(end, total)
+
         links = session.exec(
-            select(Link).order_by(Link.id)
+            select(Link)
+            .order_by(Link.id)
+            .offset(start)
+            .limit(end - start)
         ).all()
 
-    return jsonify([link_to_dict(link) for link in links])
+    response = jsonify([link_to_dict(link) for link in links])
+
+    response.headers["Content-Range"] = f"links {start}-{end}/{total}"
+
+    return response
 
 @app.post("/api/links")
 def create_link():
