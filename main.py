@@ -14,6 +14,8 @@ from sqlalchemy.exc import IntegrityError
 import json
 from sqlalchemy import func
 
+from flask_cors import CORS
+
 
 sentry_dsn = os.getenv("SENTRY_DSN")
 
@@ -23,7 +25,23 @@ if sentry_dsn:
         integrations=[FlaskIntegration()],
     )
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    static_folder="frontend_dist",
+    static_url_path="",
+)
+
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": ["http://localhost:5173"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type"],
+            "expose_headers": ["Content-Range"],
+        }
+    },
+)
 
 if os.getenv("DATABASE_URL"):
     create_db_and_tables()
@@ -32,6 +50,10 @@ if os.getenv("DATABASE_URL"):
 @app.get("/ping")
 def ping():
     return "pong"
+
+@app.get("/")
+def frontend():
+    return app.send_static_file("index.html")
 
 def link_to_dict(link):
     base_url = os.getenv("BASE_URL") or request.host_url.rstrip("/")

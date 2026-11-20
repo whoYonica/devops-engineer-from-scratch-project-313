@@ -6,3 +6,6 @@ test:
 
 lint:
 	uv run ruff check .
+
+dev:
+	npx concurrently "make run" "npx start-hexlet-devops-deploy-crud-frontend"
