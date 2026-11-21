@@ -116,7 +116,11 @@ def create_link():
     data = request.get_json(silent=True)
 
     if not isinstance(data, dict):
-        return jsonify({"detail": "Expected a JSON object"}), 422
+        return jsonify({
+            "detail": {
+                "body": "Expected a JSON object"
+            }
+        }), 422
 
     original_url = data.get("original_url")
     short_name = data.get("short_name")
@@ -179,7 +183,11 @@ def update_link(link_id):
         data = request.get_json(silent=True)
 
         if not isinstance(data, dict):
-            return jsonify({"detail": "Expected a JSON object"}), 422
+            return jsonify({
+                "detail": {
+                    "body": "Expected a JSON object"
+                }
+            }), 422
 
         original_url = data.get("original_url")
         short_name = data.get("short_name")
