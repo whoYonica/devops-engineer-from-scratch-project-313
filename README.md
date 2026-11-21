@@ -10,6 +10,18 @@
 Учебный проект Хекслета: https://ru.hexlet.io/programs/devops-engineer-from-scratch
 
 
+## Развёрнутое приложение
+
+Приложение доступно на Render:
+
+https://devops-engineer-from-scratch-project-313-ayds.onrender.com
+
+Сервис позволяет создавать, просматривать, редактировать
+и удалять короткие ссылки через веб-интерфейс.
+
+Данные хранятся в PostgreSQL.
+Мониторинг ошибок реализован с помощью Bugsink.
+
 
 ## Стек
 
@@ -55,12 +67,65 @@ curl http://localhost:8080/ping
 pong
 ```
 
+
+### Пример создания короткой ссылки
+
+Отправьте POST-запрос:
+
+```bash
+curl -X POST http://localhost:8080/api/links \
+  -H "Content-Type: application/json" \
+  -d '{"original_url":"https://github.com","short_name":"github"}'
+```
+
+После создания ссылка будет доступна по адресу:
+
+http://localhost:8080/r/github
+
+
+
+### Запуск приложения с интерфейсом
+
+Установите зависимости фронтенда:
+
+```bash
+npm ci
+```
+
+Для локального запуска необходимо настроить переменную окружения `DATABASE_URL` в файле `.env`.
+
+Запустите бэкенд и фронтенд одновременно:
+
+```bash
+make dev
+```
+
+После запуска приложение доступно по адресу:
+
+http://localhost:5173
+
+Flask API работает на порту 8080.
+
+### Проверка приложения
+
+Запустите тесты:
+
+```bash
+make test
+```
+
+Проверьте код линтером Ruff:
+
+```bash
+make lint
+```
+
+
 ### Демонстрация работы
 
 # Запуск приложения:
 [![asciicast](https://asciinema.org/a/C6Rsfs23kbpOh2bz.svg)](https://asciinema.org/a/C6Rsfs23kbpOh2bz)
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
 
 ## Мониторинг ошибок
 ![Ошибка в Bugsink](docs/bugsink-error.png)
