@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from sqlmodel import create_engine
 
-from models import Link
+from backend.models import Link
 
 
 @lru_cache

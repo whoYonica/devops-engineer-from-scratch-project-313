@@ -17,7 +17,8 @@ COPY pyproject.toml uv.lock ./
 
 RUN uv sync --locked --no-dev
 
-COPY main.py models.py database.py ./
+COPY main.py ./
+COPY backend/ ./backend/
 
 COPY --from=frontend /frontend/node_modules/@hexlet/project-devops-deploy-crud-frontend/dist ./frontend_dist
 

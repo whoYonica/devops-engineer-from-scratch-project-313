@@ -2,17 +2,10 @@ import os
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-from flask import Flask, jsonify, redirect, request
-from database import create_db_and_tables, get_engine
-from sqlmodel import Session, select
+from flask import Flask
+from backend.database import create_db_and_tables
 
-from models import Link
-from urllib.parse import urlparse
-
-from sqlalchemy.exc import IntegrityError
-
-import json
-from sqlalchemy import func
+from backend.routes import api_bp
 
 from flask_cors import CORS
 
@@ -43,212 +36,12 @@ CORS(
     },
 )
 
+app.register_blueprint(api_bp)
+
 if os.getenv("DATABASE_URL"):
     create_db_and_tables()
 
 
-@app.get("/ping")
-def ping():
-    return "pong"
-
 @app.get("/")
 def frontend():
     return app.send_static_file("index.html")
-
-def link_to_dict(link):
-    base_url = os.getenv("BASE_URL") or request.host_url.rstrip("/")
-
-    return {
-        "id": link.id,
-        "original_url": link.original_url,
-        "short_name": link.short_name,
-        "short_url": f"{base_url.rstrip('/')}/r/{link.short_name}",
-    }
-
-@app.get("/api/links")
-def get_links():
-    range_param = request.args.get("range")
-
-    if range_param is not None:
-        try:
-            bounds = json.loads(range_param)
-
-            if (
-                not isinstance(bounds, list)
-                or len(bounds) != 2
-                or any(type(value) is not int for value in bounds)
-                or bounds[0] < 0
-                or bounds[1] < bounds[0]
-            ):
-                raise ValueError("Invalid range")
-
-            start, end = bounds
-
-        except (ValueError, TypeError):
-            return jsonify({"detail": "Invalid range"}), 422
-
-    with Session(get_engine()) as session:
-        total = session.exec(
-            select(func.count(Link.id))
-        ).one()
-
-        if range_param is None:
-            start, end = 0, total
-
-        start = min(start, total)
-        end = min(end, total)
-
-        links = session.exec(
-            select(Link)
-            .order_by(Link.id)
-            .offset(start)
-            .limit(end - start)
-        ).all()
-
-    response = jsonify([link_to_dict(link) for link in links])
-
-    response.headers["Content-Range"] = f"links {start}-{end}/{total}"
-
-    return response
-
-@app.post("/api/links")
-def create_link():
-    data = request.get_json(silent=True)
-
-    if not isinstance(data, dict):
-        return jsonify({
-            "detail": {
-                "body": "Expected a JSON object"
-            }
-        }), 422
-
-    original_url = data.get("original_url")
-    short_name = data.get("short_name")
-
-    errors = {}
-
-    if not isinstance(original_url, str) or not original_url.strip():
-        errors["original_url"] = "URL is required"
-    else:
-        parsed_url = urlparse(original_url)
-        if parsed_url.scheme not in ("http", "https") or not parsed_url.netloc:
-            errors["original_url"] = "Invalid URL"
-
-    if not isinstance(short_name, str) or not short_name.strip():
-        errors["short_name"] = "Short name is required"
-
-    if errors:
-        return jsonify({"detail": errors}), 422
-
-    with Session(get_engine()) as session:
-        link = Link(
-            original_url=original_url,
-            short_name=short_name,
-        )
-
-        session.add(link)
-
-        try:
-            session.commit()
-        except IntegrityError:
-            session.rollback()
-            return jsonify({
-                "detail": {
-                    "short_name": "Short name already exists"
-                }
-            }), 422
-
-        session.refresh(link)
-
-        return jsonify(link_to_dict(link)), 201
-
-@app.get("/api/links/<int:link_id>")
-def get_link(link_id):
-    with Session(get_engine()) as session:
-        link = session.get(Link, link_id)
-
-        if link is None:
-            return jsonify({"detail": "Link not found"}), 404
-
-        return jsonify(link_to_dict(link)), 200
-
-@app.put("/api/links/<int:link_id>")
-def update_link(link_id):
-    with Session(get_engine()) as session:
-        link = session.get(Link, link_id)
-
-        if link is None:
-            return jsonify({"detail": "Link not found"}), 404
-
-        data = request.get_json(silent=True)
-
-        if not isinstance(data, dict):
-            return jsonify({
-                "detail": {
-                    "body": "Expected a JSON object"
-                }
-            }), 422
-
-        original_url = data.get("original_url")
-        short_name = data.get("short_name")
-
-        errors = {}
-
-        if not isinstance(original_url, str) or not original_url.strip():
-            errors["original_url"] = "URL is required"
-        else:
-            parsed_url = urlparse(original_url)
-
-            if parsed_url.scheme not in ("http", "https") or not parsed_url.netloc:
-                errors["original_url"] = "Invalid URL"
-
-        if not isinstance(short_name, str) or not short_name.strip():
-            errors["short_name"] = "Short name is required"
-
-        if errors:
-            return jsonify({"detail": errors}), 422
-
-        link.original_url = original_url
-        link.short_name = short_name
-
-        try:
-            session.add(link)
-            session.commit()
-        except IntegrityError:
-            session.rollback()
-            return jsonify({
-                "detail": {
-                    "short_name": "Short name already exists"
-                }
-            }), 422
-
-        session.refresh(link)
-
-        return jsonify(link_to_dict(link)), 200
-
-@app.delete("/api/links/<int:link_id>")
-def delete_link(link_id):
-    with Session(get_engine()) as session:
-        link = session.get(Link, link_id)
-
-        if link is None:
-            return jsonify({"detail": "Link not found"}), 404
-
-        session.delete(link)
-        session.commit()
-
-    return "", 204
-
-@app.get("/r/<short_name>")
-def redirect_link(short_name):
-    with Session(get_engine()) as session:
-        link = session.exec(
-            select(Link).where(Link.short_name == short_name)
-        ).first()
-
-        if link is None:
-            return jsonify({"detail": "Link not found"}), 404
-
-        original_url = link.original_url
-
-    return redirect(original_url, code=302)

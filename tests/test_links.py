@@ -1,6 +1,7 @@
 import pytest
 from sqlmodel import SQLModel, create_engine
 
+import backend.routes as routes
 import main
 
 
@@ -11,7 +12,7 @@ def client(tmp_path, monkeypatch):
 
     SQLModel.metadata.create_all(engine)
 
-    monkeypatch.setattr(main, "get_engine", lambda: engine)
+    monkeypatch.setattr(routes, "get_engine", lambda: engine)
     monkeypatch.setenv("BASE_URL", "http://localhost:8080")
 
     main.app.config["TESTING"] = True
